@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:store_ui_flutter/cart_provider.dart';
 import 'package:store_ui_flutter/product_data.dart';
+import 'package:provider/provider.dart';
 
-class ProductDetailsPage extends StatelessWidget {
-  const ProductDetailsPage({super.key});
+class ProductDetailsPage extends StatefulWidget {
+  final Map<String, Object> product;
+  const ProductDetailsPage({super.key, required this.product});
+
+  @override
+  State<ProductDetailsPage> createState() => _ProductDetailsPageState();
+}
+
+class _ProductDetailsPageState extends State<ProductDetailsPage> {
+  int selectedSize = 9;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +31,7 @@ class ProductDetailsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              products[0]['title'] as String,
+              widget.product['title'] as String,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -33,7 +43,7 @@ class ProductDetailsPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Image.asset(
-                products[0]['imageUrl'] as String,
+                widget.product['imageUrl'] as String,
               ),
             ),
             const Spacer(
@@ -57,7 +67,7 @@ class ProductDetailsPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    '${products[0]['price'] as double}',
+                    '${widget.product['price'] as double}',
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(
@@ -67,24 +77,48 @@ class ProductDetailsPage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: EdgeInsets.all(8),
-                          child: Chip(
-                            label: Text(
-                                '${(products[0]['sizes'] as List<int>)[index]}'),
-                            labelStyle: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedSize = (widget.product['sizes']
+                                    as List<int>)[index];
+                              });
+                            },
+                            child: Chip(
+                              label: Text(
+                                  '${(widget.product['sizes'] as List<int>)[index]}'),
+                              labelStyle: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              backgroundColor: selectedSize ==
+                                      (widget.product['sizes']
+                                          as List<int>)[index]
+                                  ? Colors.amberAccent
+                                  : Colors.grey,
                             ),
                           ),
                         );
                       },
-                      itemCount: (products[0]['sizes'] as List<int>).length,
+                      itemCount: (widget.product['sizes'] as List<int>).length,
                     ),
                   ),
                   ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () {
+                      if (selectedSize == 0) return;
+                      Provider.of<CartProvider>(context, listen: false)
+                          .addItem({
+                        "id": widget.product['id'],
+                        "title": widget.product['title'],
+                        "price": widget.product['price'],
+                        "imageUrl": widget.product['imageUrl'],
+                        "company": widget.product['company'],
+                        "size": selectedSize,
+                      });
+                    },
                     label: Text(
                       'Add to cart',
                     ),
